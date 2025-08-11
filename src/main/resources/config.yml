@@ -1,0 +1,5 @@
+# Whether the plugin is enabled
+enabled: true
+
+# Максимальное количество предметов в бандле (по умолчанию 128 = 2 стака)
+max-bundle-capacity: 128
