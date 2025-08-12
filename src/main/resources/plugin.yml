@@ -6,10 +6,9 @@ softdepend: [ProtocolLib]
 authors: [ otsns ]
 description: Server core plugin
 commands:
-  neyrocore:
-    description: "Reload the NeyroCore configuration."
-    usage: /core reload
-permissions:
-  neyrocore.reload:
-    description: "Allows reload the Core configuration."
+  core: # Добавьте эту секцию
+    description: Reload plugin configuration
     default: op
+    usage: /core reload
+    permission: neyrocore.reload
+    permission-message: You don't have permission to reload the plugin
