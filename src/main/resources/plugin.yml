@@ -3,12 +3,13 @@ version: ${version}
 main: com.github.otsns.neyroCore.NeyroCore
 api-version: 1.21
 softdepend: [ProtocolLib]
+
 commands:
   core:
     description: Reload plugin configuration
     usage: /core reload
     permission: neyrocore.reload
-    permission-message: You don't have permission to reload the plugin
+    permission-message: "&cYou don't have permission!"
 
 permissions:
   neyrocore.reload:
