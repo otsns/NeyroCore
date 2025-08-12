@@ -35,4 +35,3 @@ public class ConfigManager {
     public String getServerBrand() {
         return serverBrand;
     }
-}
