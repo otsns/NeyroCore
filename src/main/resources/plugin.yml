@@ -1,14 +1,16 @@
 name: NeyroCore
-version: '1.0.0'
+version: ${version}
 main: com.github.otsns.neyroCore.NeyroCore
-api-version: '1.21'
+api-version: 1.21
 softdepend: [ProtocolLib]
-authors: [ otsns ]
-description: Server core plugin
 commands:
-  core: # Добавьте эту секцию
+  core:
     description: Reload plugin configuration
-    default: op
     usage: /core reload
     permission: neyrocore.reload
     permission-message: You don't have permission to reload the plugin
+
+permissions:
+  neyrocore.reload:
+    description: Allows reloading plugin configuration
+    default: op
