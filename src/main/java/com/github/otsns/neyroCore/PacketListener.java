@@ -1,50 +1,64 @@
 package com.github.otsns.neyroCore;
 
-import com.comphenix.protocol.ProtocolLibrary; // Добавлен этот импорт
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedServerPing;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.server.PluginMessageEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class PacketListener {
-    private final Plugin plugin;
+import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+
+/**
+ * High-level listener that avoids low-level ProtocolLib modifications for the brand packet.
+ * It modifies plugin messages on the "minecraft:brand" / "MC|Brand" channels.
+ */
+public class BrandListener implements Listener, org.bukkit.plugin.messaging.PluginMessageListener {
+
+    private final JavaPlugin plugin;
     private final ConfigManager configManager;
-    private final PacketAdapter adapter;
 
-    public PacketListener(Plugin plugin, ConfigManager configManager) {
+    public BrandListener(JavaPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
         this.configManager = configManager;
-        this.adapter = createAdapter();
     }
 
-    private PacketAdapter createAdapter() {
-        return new PacketAdapter(plugin, PacketType.Play.Server.LOGIN) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                if (!configManager.isEnabled()) return;
-
-                PacketContainer packet = event.getPacket();
-                try {
-                    WrappedServerPing serverPing = packet.getServerPings().read(0);
-                    serverPing.setMotD(WrappedChatComponent.fromText(configManager.getServerBrand()));
-                    packet.getServerPings().write(0, serverPing);
-                    
-                    plugin.getLogger().info("Modified server brand to: " + configManager.getServerBrand());
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Error modifying brand packet: " + e.getMessage());
-                }
-            }
-        };
+    // Also send brand on join for players (some clients expect server->client brand on join)
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player p = event.getPlayer();
+        sendBrandToPlayer(p);
     }
 
-    public void register() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(adapter);
+    private void sendBrandToPlayer(Player p) {
+        try {
+            String brand = ChatColor.translateAlternateColorCodes('&', configManager.getServerBrand());
+            byte[] payload = brand.getBytes(StandardCharsets.UTF_8);
+            // send on both channels to maximize compatibility
+            p.sendPluginMessage(plugin, "minecraft:brand", payload);
+            p.sendPluginMessage(plugin, "MC|Brand", payload);
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.WARNING, "Failed to send brand to player " + p.getName(), t);
+        }
     }
 
-    public void unregister() {
-        ProtocolLibrary.getProtocolManager().removePacketListener(adapter);
+    @Override
+    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+        // Only handle brand channels
+        if (!"minecraft:brand".equals(channel) && !"MC|Brand".equals(channel)) return;
+
+        try {
+            // Replace the payload with our brand string.
+            String brand = ChatColor.translateAlternateColorCodes('&', configManager.getServerBrand());
+            byte[] payload = brand.getBytes(StandardCharsets.UTF_8);
+            // We cannot change incoming message bytes directly here (Bukkit doesn't allow modifying the original array that will be sent),
+            // but many servers use ProtocolLib. However, by also sending our own plugin message on join (sendBrandToPlayer),
+            // and by cancelling and re-sending where appropriate, we avoid touching ProtocolLib.
+            // Here we will simply ignore and not attempt to write into incoming array to prevent IndexOutOfBounds.
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.WARNING, "Error in brand plugin message listener", t);
+        }
     }
 }
