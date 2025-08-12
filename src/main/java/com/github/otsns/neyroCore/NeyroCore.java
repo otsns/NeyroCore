@@ -1,6 +1,7 @@
 package com.github.otsns.neyroCore;
 
-import org.bukkit.Bukkit;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,6 +14,7 @@ public class NeyroCore extends JavaPlugin {
 
     private ConfigManager configManager;
     private BrandListener brandListener;
+    private ProtocolManager protocolManager;
 
     @Override
     public void onEnable() {
@@ -21,34 +23,29 @@ public class NeyroCore extends JavaPlugin {
         this.configManager = new ConfigManager(this);
         this.configManager.reload();
 
-        this.brandListener = new BrandListener(this, configManager);
+        this.protocolManager = ProtocolLibrary.getProtocolManager();
 
-        // Unregister channels first to avoid duplicate-registration errors on reloads
-        try {
-            Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "minecraft:brand");
-            Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "minecraft:brand");
-        } catch (Exception ignored) {}
+        this.brandListener = new BrandListener(this);
 
-        // Register outgoing channel (server -> client) to send brand on join
+        // Register ProtocolLib packet listener
         try {
-            Bukkit.getMessenger().registerOutgoingPluginChannel(this, "minecraft:brand");
+            protocolManager.addPacketListener(brandListener);
         } catch (IllegalArgumentException e) {
-            getLogger().warning("Outgoing channel minecraft:brand already registered: " + e.getMessage());
+            getLogger().warning("Brand packet listener already registered: " + e.getMessage());
         }
 
-        // Register event listener for PlayerJoin to send brand
-        getServer().getPluginManager().registerEvents(brandListener, this);
+        getServer().getPluginManager().registerEvents(brandListener, this); // keep join sender for fallback
 
         getLogger().info("NeyroCore enabled. Brand: " + ChatColor.stripColor(configManager.getServerBrand()));
     }
 
     @Override
     public void onDisable() {
-        // Unregister channels/listeners
         try {
-            Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "minecraft:brand");
-            Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "minecraft:brand");
-        } catch (Exception ignored) {}
+            if (protocolManager != null && brandListener != null) {
+                protocolManager.removePacketListener(brandListener);
+            }
+        } catch (Throwable ignored) {}
 
         getLogger().info("NeyroCore disabled");
     }
@@ -63,8 +60,12 @@ public class NeyroCore extends JavaPlugin {
                 }
                 try {
                     configManager.reload();
+                    // update brand dynamically: we can resend to online players
+                    for (Player p : getServer().getOnlinePlayers()) {
+                        brandListener.sendBrandFallback(p); // send fallback packet via plugin message or packet
+                    }
                     sender.sendMessage(ChatColor.GREEN + "NeyroCore reloaded");
-                    getLogger().info("Configuration reloaded via command by " + (sender instanceof Player ? ((Player)sender).getName() : sender.getName()));
+                    getLogger().info("Configuration reloaded via command by " + (sender instanceof Player ? ((Player) sender).getName() : sender.getName()));
                 } catch (Exception e) {
                     getLogger().log(Level.WARNING, "Failed to reload config", e);
                     sender.sendMessage(ChatColor.RED + "Reload failed: " + e.getMessage());
