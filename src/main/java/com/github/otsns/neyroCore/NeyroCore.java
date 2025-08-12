@@ -1,73 +1,44 @@
 package com.github.otsns.neyroCore;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.server.ServerListPingEvent;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.player.PlayerJoinEvent;
 
-public class NeyroCore extends JavaPlugin implements Listener {
-
-    private boolean enabled;
-    private String serverBrand;
-    private Component brandComponent;
+public class NeyroCore extends JavaPlugin {
+    private ConfigManager configManager;
+    private ProtocolManager protocolManager;
+    private PacketListener packetListener;
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
-        reloadConfigValues();
-        getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("NeyroCore enabled! Brand: " + serverBrand);
-    }
+        // Инициализация конфига
+        configManager = new ConfigManager(this);
+        configManager.loadConfig();
 
-    private void reloadConfigValues() {
-        reloadConfig();
-        enabled = getConfig().getBoolean("enabled", true);
-        serverBrand = getConfig().getString("server-brand", "NeyroCore");
-        brandComponent = LegacyComponentSerializer.legacySection().deserialize(serverBrand);
-    }
+        // Регистрация обработчика пакетов
+        protocolManager = ProtocolLibrary.getProtocolManager();
+        packetListener = new PacketListener(this, configManager);
+        packetListener.register();
 
-    @EventHandler
-    public void onServerPing(ServerListPingEvent event) {
-        if (enabled) {
-            event.motd(brandComponent);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if (enabled) {
-            updateBrand(event.getPlayer());
-        }
-    }
-
-    private void updateBrand(Player player) {
-        // Используем асинхронную задачу для отправки бренда
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            try {
-                player.sendPlayerListHeader(brandComponent);
-            } catch (Exception e) {
-                getLogger().warning("Error updating brand for player: " + e.getMessage());
+        // Регистрация команды
+        getCommand("core").setExecutor((sender, command, label, args) -> {
+            if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+                configManager.reloadConfig();
+                sender.sendMessage("§aКонфигурация перезагружена!");
+                return true;
             }
-        }, 20L); // Задержка 1 секунда для надёжности
+            return false;
+        });
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("core") && args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-            reloadConfigValues();
-            // Обновляем бренд для всех онлайн-игроков
-            Bukkit.getOnlinePlayers().forEach(this::updateBrand);
-            sender.sendMessage(ChatColor.GREEN + "NeyroCore config reloaded!");
-            return true;
+    public void onDisable() {
+        if (packetListener != null) {
+            packetListener.unregister();
         }
-        return false;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 }
