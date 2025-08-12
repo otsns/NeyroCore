@@ -4,6 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedServerPing;
 import org.bukkit.plugin.Plugin;
 
@@ -26,11 +27,12 @@ public class PacketListener {
 
                 PacketContainer packet = event.getPacket();
                 try {
-                    // Правильный способ изменения server brand для 1.21.8
                     WrappedServerPing serverPing = packet.getServerPings().read(0);
-                    serverPing.setMotD(WrappedChatComponent.fromText(configManager.getServerBrand()));
-                    packet.getServerPings().write(0, serverPing);
                     
+                    // Используем встроенный WrappedChatComponent из ProtocolLib
+                    serverPing.setMotD(WrappedChatComponent.fromText(configManager.getServerBrand()));
+                    
+                    packet.getServerPings().write(0, serverPing);
                     plugin.getLogger().info("Modified server brand to: " + configManager.getServerBrand());
                 } catch (Exception e) {
                     plugin.getLogger().warning("Error modifying brand packet: " + e.getMessage());
