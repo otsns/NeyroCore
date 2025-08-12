@@ -1,6 +1,6 @@
 name: NeyroCore
 version: '1.0.0'
-main: com.github.otsns.neyroCore.NeyroCore
+main: com.github.otsns.neyrocore.NeyroCore
 api-version: '1.21'
 authors: [ otsns ]
 description: Server core plugin
