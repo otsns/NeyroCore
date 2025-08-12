@@ -24,6 +24,8 @@ public class NeyroCore extends JavaPlugin {
         // register listener
         getServer().getPluginManager().registerEvents(brandListener, this);
 
+        getServer().getMessenger().unregisterIncomingPluginChannel(this, "minecraft:brand");
+        getServer().getMessenger().unregisterOutgoingPluginChannel(this, "minecraft:brand");
         // register plugin channels for safety (incoming/outgoing)
         // older versions use "minecraft:brand", newer use "minecraft:brand"
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", brandListener);
