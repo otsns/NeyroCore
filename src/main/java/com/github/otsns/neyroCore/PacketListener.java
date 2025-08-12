@@ -27,8 +27,12 @@ public class PacketListener {
                 if (!configManager.isEnabled()) return;
 
                 PacketContainer packet = event.getPacket();
-                // Изменяем server brand
-                packet.getChatComponents().write(0, WrappedChatComponent.fromText(configManager.getServerBrand()));
+                try {
+                    // Изменяем server brand в пакете LOGIN
+                    packet.getChatComponents().write(0, WrappedChatComponent.fromText(configManager.getServerBrand()));
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error modifying brand packet: " + e.getMessage());
+                }
             }
         };
     }
