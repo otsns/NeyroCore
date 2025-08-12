@@ -34,8 +34,8 @@ public class ConfigManager {
         
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
-                // Отправляем пакет с новым брендом
                 PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.LOGIN);
+                
                 WrappedServerPing serverPing = new WrappedServerPing();
                 serverPing.setMotD(WrappedChatComponent.fromText(serverBrand));
                 brandPacket.getServerPings().write(0, serverPing);
