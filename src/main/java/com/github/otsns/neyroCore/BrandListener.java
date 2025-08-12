@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.server.PluginMessageEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.charset.StandardCharsets;
@@ -12,7 +13,7 @@ import java.util.logging.Level;
 
 /**
  * High-level listener that avoids low-level ProtocolLib modifications for the brand packet.
- * It modifies plugin messages on the "minecraft:brand" / "MC|Brand" channels.
+ * It modifies plugin messages on the "minecraft:brand" / "minecraft:brand" channels.
  */
 public class BrandListener implements Listener, org.bukkit.plugin.messaging.PluginMessageListener {
 
@@ -37,7 +38,7 @@ public class BrandListener implements Listener, org.bukkit.plugin.messaging.Plug
             byte[] payload = brand.getBytes(StandardCharsets.UTF_8);
             // send on both channels to maximize compatibility
             p.sendPluginMessage(plugin, "minecraft:brand", payload);
-            p.sendPluginMessage(plugin, "MC|Brand", payload);
+            p.sendPluginMessage(plugin, "minecraft:brand", payload);
         } catch (Throwable t) {
             plugin.getLogger().log(Level.WARNING, "Failed to send brand to player " + p.getName(), t);
         }
@@ -46,7 +47,7 @@ public class BrandListener implements Listener, org.bukkit.plugin.messaging.Plug
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
         // Only handle brand channels
-        if (!"minecraft:brand".equals(channel) && !"MC|Brand".equals(channel)) return;
+        if (!"minecraft:brand".equals(channel) && !"minecraft:brand".equals(channel)) return;
 
         try {
             // Replace the payload with our brand string.
