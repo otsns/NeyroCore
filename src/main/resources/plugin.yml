@@ -2,6 +2,7 @@ name: NeyroCore
 version: '1.0.0'
 main: com.github.otsns.neyroCore.NeyroCore
 api-version: '1.21'
+softdepend: [ProtocolLib]
 authors: [ otsns ]
 description: Server core plugin
 commands:
