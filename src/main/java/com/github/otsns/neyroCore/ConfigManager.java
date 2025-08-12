@@ -19,6 +19,7 @@ public class ConfigManager {
 
     public void reload() {
         try {
+            plugin.saveDefaultConfig();
             plugin.reloadConfig();
             enabled = plugin.getConfig().getBoolean("enabled", true);
             serverBrand = plugin.getConfig().getString("server-brand", "NeyroCore");
