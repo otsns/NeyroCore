@@ -1,45 +1,51 @@
 package com.github.otsns.neyroCore;
 
-import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class BrandListener implements Listener, PluginMessageListener {
+import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
 
-    private final NeyroCore plugin;
+/**
+ * Listener that sends configured server-brand to players on join using plugin message (server->client).
+ * Avoids low-level ProtocolLib modifications which caused IndexOutOfBounds in older code.
+ */
+public class BrandListener implements Listener {
+
+    private final JavaPlugin plugin;
     private final ConfigManager configManager;
 
-    public BrandListener(NeyroCore plugin, ConfigManager configManager) {
+    public BrandListener(JavaPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
         this.configManager = configManager;
     }
 
-    @Override
-    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        if (!channel.equalsIgnoreCase("minecraft:brand")) {
-            return; // только бренд-канал
-        }
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player p = event.getPlayer();
+        sendBrandToPlayer(p);
+    }
 
+    public void sendBrandToPlayer(Player p) {
         try {
-            ByteArrayDataInput in = ByteStreams.newDataInput(message);
-            String originalBrand = in.readUTF();
-
-            String newBrand = configManager.getServerBrand();
-            if (newBrand == null || newBrand.isEmpty()) {
-                newBrand = originalBrand;
-            }
-
-            plugin.getLogger().info("Original brand: " + originalBrand + " -> New brand: " + newBrand);
+            String raw = configManager.getServerBrand();
+            if (raw == null) raw = "NeyroCore";
+            String brand = ChatColor.translateAlternateColorCodes('&', raw);
 
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(newBrand);
-            player.sendPluginMessage(plugin, "minecraft:brand", out.toByteArray());
+            out.writeUTF(brand);
+            byte[] payload = out.toByteArray();
 
-        } catch (Exception e) {
-            plugin.getLogger().warning("Error modifying brand packet: " + e.getMessage());
+            // send plugin message (server -> client)
+            p.sendPluginMessage(plugin, "minecraft:brand", payload);
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.WARNING, "Failed to send brand to player " + p.getName(), t);
         }
     }
 }
