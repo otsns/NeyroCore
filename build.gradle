@@ -9,12 +9,15 @@ version = '1.0'
 repositories {
     mavenCentral()
     maven { url 'https://repo.papermc.io/repository/maven-public/' }
-    maven { url 'https://repo.dmulloy2.net/repository/public/' } // ProtocolLib
+    // Используем основной репозиторий ProtocolLib
+    maven { url 'https://repo.codemc.org/repository/maven-public/' }
+    // Добавляем резервный репозиторий
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT'
-    compileOnly 'com.comphenix.protocol:ProtocolLib:5.4.0' // Для 1.21.8
+    compileOnly 'com.comphenix.protocol:ProtocolLib:5.4.0'
 }
 
 shadowJar {
