@@ -25,11 +25,11 @@ public class NeyroCore extends JavaPlugin {
         getServer().getPluginManager().registerEvents(brandListener, this);
 
         // register plugin channels for safety (incoming/outgoing)
-        // older versions use "MC|Brand", newer use "minecraft:brand"
+        // older versions use "minecraft:brand", newer use "minecraft:brand"
         Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", brandListener);
-        Bukkit.getMessenger().registerIncomingPluginChannel(this, "MC|Brand", brandListener);
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, "minecraft:brand", brandListener);
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "minecraft:brand");
-        Bukkit.getMessenger().registerOutgoingPluginChannel(this, "MC|Brand");
+        Bukkit.getMessenger().registerOutgoingPluginChannel(this, "minecraft:brand");
 
         getLogger().info("NeyroCore enabled. Brand: " + ChatColor.stripColor(configManager.getServerBrand()));
     }
@@ -37,9 +37,9 @@ public class NeyroCore extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "minecraft:brand", brandListener);
-        Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "MC|Brand", brandListener);
+        Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "minecraft:brand", brandListener);
         Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "minecraft:brand");
-        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "MC|Brand");
+        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "minecraft:brand");
         getLogger().info("NeyroCore disabled");
     }
 
