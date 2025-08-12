@@ -1,5 +1,6 @@
 package com.github.otsns.neyroCore;
 
+import com.comphenix.protocol.ProtocolLibrary; // Добавлен этот импорт
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
@@ -28,11 +29,9 @@ public class PacketListener {
                 PacketContainer packet = event.getPacket();
                 try {
                     WrappedServerPing serverPing = packet.getServerPings().read(0);
-                    
-                    // Используем встроенный WrappedChatComponent из ProtocolLib
                     serverPing.setMotD(WrappedChatComponent.fromText(configManager.getServerBrand()));
-                    
                     packet.getServerPings().write(0, serverPing);
+                    
                     plugin.getLogger().info("Modified server brand to: " + configManager.getServerBrand());
                 } catch (Exception e) {
                     plugin.getLogger().warning("Error modifying brand packet: " + e.getMessage());
