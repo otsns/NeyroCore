@@ -31,16 +31,14 @@ public class ConfigManager {
 
     public void updateOnlinePlayersBrand() {
         if (!enabled || !Bukkit.getPluginManager().isPluginEnabled("ProtocolLib")) return;
-        
+    
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
-                // Создаем пакет для обновления бренда
-                PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.CUSTOM_PAYLOAD);
-                brandPacket.getModifier().writeDefaults();
-                brandPacket.getStrings().write(0, "minecraft:brand");
-                brandPacket.getByteArrays().write(0, serverBrand.getBytes(StandardCharsets.UTF_8));
-                
-                // Отправляем пакет игроку
+            // Новый метод для 1.21+
+                PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.SERVER_DATA);
+                brandPacket.getStrings().write(0, serverBrand);
+                brandPacket.getBooleans().write(0, false); // previewsChat = false
+            
                 ProtocolLibrary.getProtocolManager().sendServerPacket(player, brandPacket);
             } catch (Exception e) {
                 plugin.getLogger().warning("Error updating brand for " + player.getName() + ": " + e.getMessage());
