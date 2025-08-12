@@ -1,15 +1,14 @@
 package com.github.otsns.neyroCore;
 
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedServerPing;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
+
+/**
+ * Lightweight config manager to load values from config.yml
+ */
 public class ConfigManager {
+
     private final JavaPlugin plugin;
     private boolean enabled;
     private String serverBrand;
@@ -18,33 +17,14 @@ public class ConfigManager {
         this.plugin = plugin;
     }
 
-    public void loadConfig() {
-        plugin.saveDefaultConfig();
-        plugin.reloadConfig();
-        enabled = plugin.getConfig().getBoolean("enabled", true);
-        serverBrand = plugin.getConfig().getString("server-brand", "NeyroCore");
-    }
-
-    public void reloadConfig() {
-        loadConfig();
-    }
-
-    public void updateOnlinePlayersBrand() {
-        if (!enabled || !Bukkit.getPluginManager().isPluginEnabled("ProtocolLib")) return;
-        
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            try {
-                PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.LOGIN);
-                
-                WrappedServerPing serverPing = new WrappedServerPing();
-                serverPing.setMotD(WrappedChatComponent.fromText(serverBrand));
-                brandPacket.getServerPings().write(0, serverPing);
-                
-                ProtocolLibrary.getProtocolManager().sendServerPacket(player, brandPacket);
-                plugin.getLogger().info("Updated brand for " + player.getName() + " to: " + serverBrand);
-            } catch (Exception e) {
-                plugin.getLogger().warning("Error updating brand for " + player.getName() + ": " + e.getMessage());
-            }
+    public void reload() {
+        try {
+            plugin.reloadConfig();
+            enabled = plugin.getConfig().getBoolean("enabled", true);
+            serverBrand = plugin.getConfig().getString("server-brand", "NeyroCore");
+            plugin.getLogger().info("Config loaded. enabled=" + enabled + ", server-brand=" + serverBrand);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to load config", e);
         }
     }
 
