@@ -1,5 +1,5 @@
 # Whether the plugin is enabled
 enabled: true
 
-# Максимальное количество предметов в бандле (по умолчанию 128 = 2 стака)
-max-bundle-capacity: 128
+# Название ядра для отображения в F3
+brand-name: "NeyroCore"
