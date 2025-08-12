@@ -2,4 +2,4 @@
 enabled: true
 
 # Название ядра для отображения в F3
-brand-name: "NeyroCore"
+server-brand: "NeyroCore"
