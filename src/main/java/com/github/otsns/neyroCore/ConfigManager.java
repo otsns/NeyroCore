@@ -3,6 +3,8 @@ package com.github.otsns.neyroCore;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.comphenix.protocol.wrappers.WrappedServerPing;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,11 +34,14 @@ public class ConfigManager {
         
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
-                PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.SERVER_DATA);
-                brandPacket.getStrings().write(0, serverBrand);
-                brandPacket.getBooleans().write(0, false); // previewsChat = false
+                // Отправляем пакет с новым брендом
+                PacketContainer brandPacket = new PacketContainer(PacketType.Play.Server.LOGIN);
+                WrappedServerPing serverPing = new WrappedServerPing();
+                serverPing.setMotD(WrappedChatComponent.fromText(serverBrand));
+                brandPacket.getServerPings().write(0, serverPing);
                 
                 ProtocolLibrary.getProtocolManager().sendServerPacket(player, brandPacket);
+                plugin.getLogger().info("Updated brand for " + player.getName() + " to: " + serverBrand);
             } catch (Exception e) {
                 plugin.getLogger().warning("Error updating brand for " + player.getName() + ": " + e.getMessage());
             }
