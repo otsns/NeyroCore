@@ -5,10 +5,10 @@ import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
 import java.util.logging.Level;
 
 public class NeyroCore extends JavaPlugin {
@@ -43,16 +43,50 @@ public class NeyroCore extends JavaPlugin {
         }
 
         // Регистрация команды
-        PluginCommand coreCommand = getCommand("core");
-        if (coreCommand != null) {
-            coreCommand.setExecutor(this);
-            getLogger().info("Command '/core' registered successfully");
-        } else {
-            getLogger().severe("Command 'core' not found in plugin.yml! Check your configuration.");
-        }
-
+        registerCommand();
+        
         getLogger().info("NeyroCore v" + getDescription().getVersion() + " enabled!");
         getLogger().info("Server brand set to: " + configManager.getServerBrand());
+    }
+
+    private void registerCommand() {
+        try {
+            // Регистрация команды
+            Objects.requireNonNull(this.getCommand("core")).setExecutor((sender, command, label, args) -> {
+                if (args.length == 0) {
+                    sender.sendMessage("§eNeyroCore v" + getDescription().getVersion());
+                    sender.sendMessage("§eUsage: /core reload");
+                    return true;
+                }
+
+                if (args[0].equalsIgnoreCase("reload")) {
+                    if (!sender.hasPermission("neyrocore.reload")) {
+                        sender.sendMessage("§cYou don't have permission to reload the plugin!");
+                        return true;
+                    }
+
+                    try {
+                        configManager.reloadConfig();
+                        sender.sendMessage("§aConfiguration reloaded successfully!");
+                        
+                        // Обновляем бренд для всех онлайн-игроков
+                        configManager.updateOnlinePlayersBrand();
+                        sender.sendMessage("§aServer brand updated for all online players!");
+                        return true;
+                    } catch (Exception e) {
+                        sender.sendMessage("§cError reloading configuration: " + e.getMessage());
+                        getLogger().log(Level.SEVERE, "Error reloading configuration", e);
+                        return true;
+                    }
+                }
+
+                sender.sendMessage("§eUsage: /core reload");
+                return true;
+            });
+            getLogger().info("Command '/core' registered successfully");
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Critical error registering command", e);
+        }
     }
 
     @Override
@@ -62,43 +96,6 @@ public class NeyroCore extends JavaPlugin {
             getLogger().info("Packet listener unregistered");
         }
         getLogger().info("NeyroCore disabled");
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("core")) {
-            return false;
-        }
-
-        if (args.length == 0) {
-            sender.sendMessage("§eNeyroCore v" + getDescription().getVersion());
-            sender.sendMessage("§eUsage: /core reload");
-            return true;
-        }
-
-        if (args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("neyrocore.reload")) {
-                sender.sendMessage("§cYou don't have permission to reload the plugin!");
-                return true;
-            }
-
-            try {
-                configManager.reloadConfig();
-                sender.sendMessage("§aConfiguration reloaded successfully!");
-                
-                // Обновляем бренд для всех онлайн-игроков
-                configManager.updateOnlinePlayersBrand();
-                sender.sendMessage("§aServer brand updated for all online players!");
-                return true;
-            } catch (Exception e) {
-                sender.sendMessage("§cError reloading configuration: " + e.getMessage());
-                getLogger().log(Level.SEVERE, "Error reloading configuration", e);
-                return true;
-            }
-        }
-
-        sender.sendMessage("§eUsage: /core reload");
-        return true;
     }
 
     public ConfigManager getConfigManager() {
